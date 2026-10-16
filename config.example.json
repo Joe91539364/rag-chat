@@ -1,0 +1,26 @@
+{
+  "default_backend": "zhipu",
+  "backends": {
+    "zhipu": {
+      "name": "智谱 GLM-4-Flash（免费）",
+      "api_key": "",
+      "base_url": "https://open.bigmodel.cn/api/paas/v4",
+      "model": "glm-4-flash",
+      "free": true
+    },
+    "siliconflow": {
+      "name": "硅基流动（免费额度，可调 DeepSeek/Qwen）",
+      "api_key": "",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "model": "deepseek-ai/DeepSeek-V3",
+      "free": true
+    },
+    "deepseek": {
+      "name": "DeepSeek 官方",
+      "api_key": "",
+      "base_url": "https://api.deepseek.com",
+      "model": "deepseek-chat",
+      "free": false
+    }
+  }
+}
