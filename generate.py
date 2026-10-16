@@ -121,6 +121,8 @@ def main():
     parser.add_argument("query", nargs="*", help="要问的问题")
     parser.add_argument("--backend", help="后端名称：zhipu / siliconflow / deepseek")
     parser.add_argument("--top-k", type=int, default=5, help="检索返回条数（默认5）")
+    parser.add_argument("--retriever", choices=["numpy", "chroma"], default="numpy",
+                        help="检索后端：numpy=手写余弦，chroma=向量库")
     parser.add_argument("--list", action="store_true", help="列出所有后端")
     args = parser.parse_args()
 
@@ -133,7 +135,7 @@ def main():
     backend_name = args.backend or config["default_backend"]
 
     messages = load_messages(DATA_FILE)
-    index = RAGIndex(messages, embedder_name="bge")
+    index = RAGIndex(messages, embedder_name="bge", retriever=args.retriever)
     hits = index.search(query, top_k=args.top_k)
 
     print(f"【问题】{query}")

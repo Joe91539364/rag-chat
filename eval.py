@@ -6,7 +6,7 @@ RAG 检索评测：计算 recall@k，量化检索效果
 - 对每个问题做检索，看正确答案是否落在 top-k 结果里
 - 统计 recall@1 / recall@3，用数字证明系统有效
 
-运行：python eval.py [--embedder bge|bow]
+运行：python eval.py [--embedder bge|bow] [--retriever numpy|chroma]
 """
 
 import argparse
@@ -41,13 +41,13 @@ QUERIES = [
 ]
 
 
-def evaluate(embedder_name: str, top_k: int = 3):
+def evaluate(embedder_name: str, top_k: int = 3, retriever: str = "numpy"):
     messages = load_messages(DATA_FILE)
-    index = RAGIndex(messages, embedder_name=embedder_name)
+    index = RAGIndex(messages, embedder_name=embedder_name, retriever=retriever)
 
     id_to_idx = {m["id"]: i for i, m in enumerate(messages)}
 
-    print(f"\n=== 评测：embedder={embedder_name}, top_k={top_k} ===\n")
+    print(f"\n=== 评测：embedder={embedder_name}, retriever={retriever}, top_k={top_k} ===\n")
     hits = {k: 0 for k in range(1, top_k + 1)}
     total = len(QUERIES)
 
@@ -83,5 +83,6 @@ def evaluate(embedder_name: str, top_k: int = 3):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--embedder", choices=["bge", "bow"], default="bge")
+    parser.add_argument("--retriever", choices=["numpy", "chroma"], default="numpy")
     args = parser.parse_args()
-    evaluate(args.embedder)
+    evaluate(args.embedder, retriever=args.retriever)

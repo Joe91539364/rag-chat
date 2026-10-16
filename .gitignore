@@ -4,6 +4,9 @@ models/
 # 配置文件（含 api_key，不提交）
 config.json
 
+# Chroma 向量库本地索引（缓存，不提交）
+chroma_db/
+
 # Python
 __pycache__/
 *.pyc

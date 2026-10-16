@@ -23,7 +23,7 @@
 | 模块 | 当前实现 | 升级方向 |
 |---|---|---|
 | 嵌入 | bge-m3 句子嵌入（本地 GPU/CPU 跑） | 支持词袋基线做对照 |
-| 检索 | 余弦相似度（手写 NumPy） | Chroma / pgvector / Milvus |
+| 检索 | 余弦相似度（手写 NumPy） + Chroma 向量库 | pgvector / Milvus |
 | 生成 | 多后端 OpenAI 兼容接口（智谱免费） | 其它 LLM / 本地模型 |
 | 评测 | recall@k（eval.py） | 回答质量评估 |
 | 记忆 | 无 | 分层摘要 + 长期记忆 |
@@ -52,7 +52,12 @@ python rag.py "体测是几号"
 
 # 词袋基线（零依赖，秒出，用于对照）
 python rag.py "体测是几号" --embedder bow
+
+# Chroma 向量库检索（专业引擎，数据量大时更高效）
+python rag.py "体测是几号" --retriever chroma
 ```
+
+> 检索后端默认 `numpy`（手写余弦），用 `--retriever chroma` 切换到 Chroma 向量库。两种后端检索结果一致，Chroma 适合消息量大、需要持久化索引的场景（索引存在 `chroma_db/`）。
 
 ### 4. 生成式回答（接 LLM，支持多后端切换）
 
@@ -84,8 +89,9 @@ python generate.py "体测是几号" --top-k 8
 ### 5. 评测检索效果
 
 ```bash
-python eval.py --embedder bge   # bge-m3 的 recall@k
-python eval.py --embedder bow   # 词袋基线对照
+python eval.py --embedder bge             # bge-m3 的 recall@k（numpy 后端）
+python eval.py --embedder bow             # 词袋基线对照
+python eval.py --retriever chroma         # 用 Chroma 后端评测
 ```
 
 ## 端到端验证（已跑通）
@@ -137,7 +143,7 @@ rag-prototype/
 1. ✅ 接入真实嵌入模型（sentence-transformers + bge-m3）
 2. ✅ 接入 LLM API（多后端可切换）
 3. ✅ 增加评测集，量化 recall@k
-4. 换用向量数据库，支持大规模消息
+4. ✅ 换用向量数据库，支持大规模消息（Chroma，`--retriever chroma`）
 5. 分层摘要 + 长期记忆（记忆复利）
 6. Agent 化：工具调用（日历/待办/提醒）
 
