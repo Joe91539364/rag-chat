@@ -7,6 +7,10 @@ config.json
 # Chroma 向量库本地索引（缓存，不提交）
 chroma_db/
 
+# 运行时产生的记忆/工具数据（不提交）
+data/memory_store.json
+data/agent_store.json
+
 # Python
 __pycache__/
 *.pyc

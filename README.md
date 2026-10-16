@@ -26,7 +26,8 @@
 | 检索 | 余弦相似度（手写 NumPy） + Chroma 向量库 | pgvector / Milvus |
 | 生成 | 多后端 OpenAI 兼容接口（智谱免费） | 其它 LLM / 本地模型 |
 | 评测 | recall@k（eval.py） | 回答质量评估 |
-| 记忆 | 无 | 分层摘要 + 长期记忆 |
+| 记忆 | 分层摘要 + 长期记忆（memory.py） | 向量化记忆检索 |
+| 工具 | 待办 / 提醒 / 日程（agent.py） | 更多工具（邮件/日历/投票） |
 
 ## 快速开始
 
@@ -94,6 +95,33 @@ python eval.py --embedder bow             # 词袋基线对照
 python eval.py --retriever chroma         # 用 Chroma 后端评测
 ```
 
+### 6. 分层记忆（会话摘要 + 长期记忆沉淀）
+
+```bash
+# 从全部消息生成会话摘要 + 抽取长期记忆事实（沉淀到 data/memory_store.json）
+python memory.py
+
+# 关键词检索长期记忆
+python memory.py --recall "体测"
+```
+
+> 设计是「记忆复利」：短期=原始消息，中期=LLM 压缩的会话摘要，长期=从摘要中抽取的自包含事实。用一次，沉淀一批，越用越懂这个班。
+
+### 7. Agent 工具调用（待办 / 提醒 / 日程）
+
+```bash
+# 设提醒
+python agent.py "提醒我周五下午3点开班会"
+
+# 加待办
+python agent.py "帮我记一下，明天要交高数作业"
+
+# 查日程（汇总待办 + 提醒）
+python agent.py "我最近有什么待办？"
+```
+
+> 用 LLM 判断意图并抽取参数，落到本地 JSON（`data/agent_store.json`）。未配置 key 时降级为关键词规则，不报错。
+
 ## 端到端验证（已跑通）
 
 用智谱 GLM-4-Flash 免费模型实测，检索 + 生成闭环完整：
@@ -126,7 +154,9 @@ python gen_data.py   # 生成 136 条贴近真实班级群聊的消息
 ```
 rag-prototype/
 ├── rag.py              # 核心：加载/索引/检索/生成
-├── generate.py         # LLM 生成层（多后端可切换）
+├── generate.py         # LLM 生成层（多后端可切换 + 通用 call_llm）
+├── memory.py           # 分层记忆：会话摘要 + 长期记忆沉淀
+├── agent.py            # Agent 工具调用：待办/提醒/日程
 ├── eval.py             # 评测：recall@k
 ├── gen_data.py         # 生成扩充数据集（136 条）
 ├── download_model.py   # 下载 bge-m3 模型（含国内网络处理）
@@ -134,7 +164,9 @@ rag-prototype/
 ├── requirements.txt
 ├── .gitignore
 ├── data/
-│   └── messages.json   # 群聊消息样本（136 条）
+│   ├── messages.json    # 群聊消息样本（136 条）
+│   ├── memory_store.json# 分层记忆（摘要 + 长期记忆）
+│   └── agent_store.json # Agent 工具数据（待办/提醒）
 └── README.md
 ```
 
@@ -144,8 +176,8 @@ rag-prototype/
 2. ✅ 接入 LLM API（多后端可切换）
 3. ✅ 增加评测集，量化 recall@k
 4. ✅ 换用向量数据库，支持大规模消息（Chroma，`--retriever chroma`）
-5. 分层摘要 + 长期记忆（记忆复利）
-6. Agent 化：工具调用（日历/待办/提醒）
+5. ✅ 分层摘要 + 长期记忆（记忆复利，`memory.py`）
+6. ✅ Agent 化：工具调用（日历/待办/提醒，`agent.py`）
 
 ## 许可证
 

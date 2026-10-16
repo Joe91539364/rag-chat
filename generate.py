@@ -48,6 +48,39 @@ def build_context(hits):
     return "\n".join(lines)
 
 
+def call_llm(system: str, user: str, backend_name: str = None) -> str:
+    """通用 LLM 调用：自定义 system/user 提示词，供 memory.py / agent.py 复用。
+
+    未配置 key 时返回空字符串，调用方自行降级。
+    """
+    import requests
+
+    config = load_config()
+    name = backend_name or config["default_backend"]
+    backend = config["backends"].get(name)
+    if not backend:
+        raise ValueError(f"未知后端 '{name}'")
+    if not backend["api_key"].strip():
+        return ""
+
+    payload = {
+        "model": backend["model"],
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+        "temperature": 0.3,
+    }
+    resp = requests.post(
+        f"{backend['base_url'].rstrip('/')}/chat/completions",
+        headers={"Authorization": f"Bearer {backend['api_key'].strip()}"},
+        json=payload,
+        timeout=90,
+    )
+    resp.raise_for_status()
+    return resp.json()["choices"][0]["message"]["content"]
+
+
 def call_openai_compatible(backend: dict, query: str, context: str) -> str:
     """调用 OpenAI 兼容接口（智谱/硅基流动/DeepSeek 都兼容此格式）。"""
     import requests
