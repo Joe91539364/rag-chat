@@ -87,6 +87,15 @@ python generate.py "体测是几号" --top-k 8
 
 > 未配置任何 key 时自动降级为「检索拼接」，不报错。三个后端都兼容 OpenAI 格式，换模型只需改 `--backend` 或 `config.json` 里的 `default_backend`。
 
+## 实战复盘（踩坑记录）
+
+📖 项目开发过程中的真实踩坑与解法，已整理成一篇技术复盘，见 **[BLOG.md](./BLOG.md)**。涵盖：
+
+1. Windows + 国内网络下载 bge-m3 的**三个连环坑**（代理 502 → xet 401 → 空文件）
+2. RAG 检索中"答案可能排不进 top-3"的经典现象
+3. 用 recall@k **数据证明**为什么不用词袋
+4. 解析聊天记录时"时间戳被冒号拆坏"的边界 bug
+
 ### 5. 评测检索效果
 
 ```bash
@@ -194,6 +203,7 @@ rag-prototype/
 ├── agent.py            # Agent 工具调用：待办/提醒/日程
 ├── web_app.py          # 班长工作台：本地网页（Flask 后端）
 ├── importers.py        # 群聊记录解析器：自动识别多种粘贴/导出格式
+├── BLOG.md             # 实战复盘：4 个真实踩坑与解法
 ├── templates/
 │   └── index.html      # 工作台前端界面
 ├── eval.py             # 评测：recall@k
