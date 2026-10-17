@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>班长工作台</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --panel: #ffffff;
+    --border: #e5e7eb;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --accent: #4f46e5;
+    --accent-soft: #eef2ff;
+    --red: #ef4444;
+    --green: #10b981;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 { font-size: 18px; font-weight: 600; }
+  header .status { font-size: 13px; color: var(--muted); }
+  header .status .dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green); margin-right: 6px; vertical-align: middle;
+  }
+  .layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 16px;
+    padding: 16px 24px;
+    overflow: hidden;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel-title {
+    padding: 14px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel-title .badge {
+    font-size: 12px; color: var(--accent); background: var(--accent-soft);
+    padding: 2px 10px; border-radius: 999px; font-weight: 500;
+  }
+
+  /* 对话区 */
+  .chat { display: flex; flex-direction: column; flex: 1; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+  .msg { max-width: 82%; padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.6; }
+  .msg.user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+  .msg.assistant { align-self: flex-start; background: #f3f4f6; border-bottom-left-radius: 4px; }
+  .msg .label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .msg.assistant .label { color: var(--accent); }
+  .msg pre { white-space: pre-wrap; word-break: break-word; font-family: inherit; }
+  .context { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+  .context-title { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .context-item { font-size: 12px; color: var(--muted); padding: 3px 0; display: flex; gap: 6px; }
+  .context-item .score { color: var(--accent); font-family: monospace; flex-shrink: 0; }
+  .typing { align-self: flex-start; color: var(--muted); font-size: 13px; padding: 4px 8px; }
+
+  .chat-input { border-top: 1px solid var(--border); padding: 14px; display: flex; gap: 10px; align-items: flex-end; }
+  .chat-input textarea {
+    flex: 1; border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;
+    font-size: 14px; font-family: inherit; resize: none; height: 44px; line-height: 1.5;
+    outline: none; transition: border-color .15s;
+  }
+  .chat-input textarea:focus { border-color: var(--accent); }
+  .btn {
+    background: var(--accent); color: #fff; border: none; border-radius: 10px;
+    padding: 11px 20px; font-size: 14px; cursor: pointer; font-weight: 500;
+    white-space: nowrap; transition: opacity .15s;
+  }
+  .btn:hover { opacity: .88; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.secondary { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
+
+  /* 右侧栏 */
+  .sidebar { display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+  .todos { flex: 1; min-height: 0; }
+  .todo-list { overflow-y: auto; padding: 10px 14px; }
+  .todo-item { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+  .todo-item:last-child { border-bottom: none; }
+  .todo-item input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+  .todo-item .done { text-decoration: line-through; color: var(--muted); }
+  .todo-item .time { margin-left: auto; font-size: 11px; color: var(--muted); flex-shrink: 0; }
+  .todo-item .del { cursor: pointer; color: #d1d5db; font-size: 16px; line-height: 1; padding: 0 2px; }
+  .todo-item .del:hover { color: var(--red); }
+  .empty { color: var(--muted); font-size: 13px; text-align: center; padding: 20px 0; }
+
+  .memory-search { padding: 10px 14px; display: flex; gap: 8px; }
+  .memory-search input {
+    flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px;
+    font-size: 13px; outline: none;
+  }
+  .memory-list { overflow-y: auto; padding: 4px 14px 14px; max-height: 240px; }
+  .memory-item { font-size: 13px; padding: 7px 0; border-bottom: 1px solid #f3f4f6; line-height: 1.5; }
+  .memory-item:last-child { border-bottom: none; }
+
+  .import-area { }
+  .import-body { padding: 12px 14px; }
+  .import-body textarea {
+    width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+    font-size: 13px; font-family: inherit; resize: vertical; min-height: 80px; outline: none;
+  }
+  .import-hint { font-size: 12px; color: var(--muted); margin: 8px 0; line-height: 1.5; }
+  .import-body .btn { width: 100%; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📋 班长工作台</h1>
+  <div class="status"><span class="dot"></span><span id="status-text">加载中…</span></div>
+</header>
+
+<div class="layout">
+  <!-- 左：对话 -->
+  <div class="panel chat">
+    <div class="panel-title">
+      问一问
+      <span class="badge" id="backend-badge">…</span>
+    </div>
+    <div class="chat-messages" id="messages">
+      <div class="msg assistant">
+        <div class="label">助手</div>
+        <pre>你好班长！我是你的群聊助手。
+
+- 问我群里的任何事（体测、奖学金、作业…）
+- 或让我「记一笔」：直接说"提醒我周五开班会""记一下明天交高数作业"
+
+试试问一句，比如「体测是几号？」</pre>
+      </div>
+    </div>
+    <div class="chat-input">
+      <textarea id="query" placeholder="问我群聊里的问题，或让我记一笔待办…" rows="1"></textarea>
+      <button class="btn" id="send-btn">发送</button>
+    </div>
+  </div>
+
+  <!-- 右：待办 + 记忆 + 导入 -->
+  <div class="sidebar">
+    <div class="panel todos">
+      <div class="panel-title">待办 & 提醒 <span class="badge" id="todo-count">0</span></div>
+      <div class="todo-list" id="todo-list"><div class="empty">暂无待办</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">长期记忆 <span class="badge" id="mem-count">0</span></div>
+      <div class="memory-search">
+        <input type="text" id="mem-q" placeholder="检索记忆，如「体测」">
+        <button class="btn secondary" id="mem-btn" style="padding:7px 14px;">搜</button>
+      </div>
+      <div class="memory-list" id="memory-list"><div class="empty">暂无长期记忆</div></div>
+    </div>
+
+    <div class="panel import-area">
+      <div class="panel-title">导入群聊消息</div>
+      <div class="import-body">
+        <textarea id="import-text" placeholder="把微信聊天记录粘贴到这里…"></textarea>
+        <div class="import-hint">自动识别格式：① 逐条「昵称：内容」② 电脑版复制（带时间戳）③ 合并转发复制 ④ 留痕/WeChatMsg 导出的 JSON/CSV。粘贴后点导入即可。</div>
+        <button class="btn" id="import-btn">导入</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+  });
+  return res.json();
+}
+
+function addMsg(role, text, context) {
+  const box = $('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  const label = document.createElement('div');
+  label.className = 'label';
+  label.textContent = role === 'user' ? '你' : '助手';
+  const pre = document.createElement('pre');
+  pre.textContent = text;
+  div.appendChild(label);
+  div.appendChild(pre);
+
+  if (context && context.length) {
+    const ctx = document.createElement('div');
+    ctx.className = 'context';
+    const t = document.createElement('div');
+    t.className = 'context-title';
+    t.textContent = '依据的群聊消息：';
+    ctx.appendChild(t);
+    context.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'context-item';
+      const sc = document.createElement('span');
+      sc.className = 'score';
+      sc.textContent = c.score.toFixed(3);
+      const txt = document.createElement('span');
+      txt.textContent = `[${c.speaker}] ${c.text}`;
+      item.appendChild(sc);
+      item.appendChild(txt);
+      ctx.appendChild(item);
+    });
+    div.appendChild(ctx);
+  }
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function showTyping() {
+  const box = $('messages');
+  const el = document.createElement('div');
+  el.className = 'typing';
+  el.id = 'typing';
+  el.textContent = '正在思考…';
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+function hideTyping() {
+  const el = $('typing');
+  if (el) el.remove();
+}
+
+async function send() {
+  const q = $('query').value.trim();
+  if (!q) return;
+  addMsg('user', q);
+  $('query').value = '';
+  $('send-btn').disabled = true;
+  showTyping();
+  try {
+    const r = await api('/api/chat', { method: 'POST', body: JSON.stringify({ query: q }) });
+    hideTyping();
+    if (r.ok) {
+      addMsg('assistant', r.answer, r.context);
+    } else {
+      addMsg('assistant', '出错了：' + (r.error || '未知错误'));
+    }
+  } catch (e) {
+    hideTyping();
+    addMsg('assistant', '请求失败：' + e.message);
+  } finally {
+    $('send-btn').disabled = false;
+    refreshTodos();
+  }
+}
+
+async function refreshTodos() {
+  const r = await api('/api/todos');
+  const store = r.store || { todos: [], reminders: [] };
+  const list = $('todo-list');
+  list.innerHTML = '';
+  const open = store.todos.filter(t => !t.done);
+  const done = store.todos.filter(t => t.done);
+  $('todo-count').textContent = open.length;
+
+  if (!open.length && !store.reminders.length && !done.length) {
+    list.innerHTML = '<div class="empty">暂无待办</div>';
+    return;
+  }
+  const renderTodo = (t) => {
+    const div = document.createElement('div');
+    div.className = 'todo-item';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = t.done;
+    cb.onchange = async () => {
+      await api('/api/todos', { method: 'POST', body: JSON.stringify({ title: t.title, done: cb.checked }) });
+      refreshTodos();
+    };
+    const span = document.createElement('span');
+    span.textContent = t.title;
+    if (t.done) span.className = 'done';
+    const time = document.createElement('span');
+    time.className = 'time';
+    time.textContent = (t.created || '').slice(5, 16);
+    div.appendChild(cb);
+    div.appendChild(span);
+    div.appendChild(time);
+    list.appendChild(div);
+  };
+  store.reminders.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'todo-item';
+    div.innerHTML = `<span>⏰</span>`;
+    const span = document.createElement('span');
+    span.textContent = `${r.title}（${r.time}）`;
+    div.appendChild(span);
+    list.appendChild(div);
+  });
+  open.forEach(renderTodo);
+  done.forEach(renderTodo);
+}
+
+async function loadMemories(q) {
+  const r = await api('/api/memories' + (q ? '?q=' + encodeURIComponent(q) : ''));
+  $('mem-count').textContent = r.total || 0;
+  const list = $('memory-list');
+  list.innerHTML = '';
+  if (!r.memories || !r.memories.length) {
+    list.innerHTML = '<div class="empty">' + (q ? '没有匹配的记忆' : '暂无长期记忆，运行 memory.py 可沉淀') + '</div>';
+    return;
+  }
+  r.memories.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'memory-item';
+    div.textContent = m;
+    list.appendChild(div);
+  });
+}
+
+async function doImport() {
+  const text = $('import-text').value.trim();
+  if (!text) return;
+  const r = await api('/api/import', { method: 'POST', body: JSON.stringify({ text }) });
+  if (r.ok) {
+    addMsg('assistant', `已导入 ${r.added} 条消息，当前共 ${r.total} 条，已重新建立索引。`);
+    $('import-text').value = '';
+  } else {
+    addMsg('assistant', '导入失败：' + (r.error || '未知错误'));
+  }
+}
+
+async function initStatus() {
+  const r = await api('/api/status');
+  $('status-text').textContent = `后端 ${r.default_backend} · 消息 ${r.message_count} 条 · 记忆 ${r.memory_count} 条 · 待办 ${r.todo_count} 项`;
+  const b = r.backends?.[r.default_backend];
+  $('backend-badge').textContent = b ? (b.name + (b.configured ? ' ✓' : ' 未配置')) : r.default_backend;
+}
+
+$('send-btn').onclick = send;
+$('query').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+$('mem-btn').onclick = () => loadMemories($('mem-q').value.trim());
+$('mem-q').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') loadMemories($('mem-q').value.trim());
+});
+$('import-btn').onclick = doImport;
+
+initStatus();
+refreshTodos();
+loadMemories('');
+</script>
+</body>
+</html>
